@@ -1,13 +1,52 @@
 #define F_CPU		4000000L
 #define BAUD_RATE	9600L
 
+#include <assert.h>
 #include <inttypes.h>
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 
 #include "uart.h"
 #include "adc.h"
+
+#define handle_btn_pressed (_btn)				\
+	({							\
+		switch ((byte_t) _btn) {			\
+		case BTNS_HOUR_INC:				\
+			time_inc_hour(&new_props);		\
+			break;					\
+		case BTNS_HOUR_DEC:				\
+			time_dec_hour(&new_props);		\
+			break;					\
+		case BTNS_MINUTE_INC:				\
+			time_inc_minute(&new_props);		\
+			break;					\
+		case BTNS_MINUTE_DEC:				\
+			time_inc_minute(&new_props);		\
+			break;					\
+		case BTNS_ENTER:				\
+			cli();					\
+			set = true;				\
+			props.hours = new_props.hours;		\
+			props.minutes = new_props.minutes;	\
+			sei();					\
+			break;					\
+		case BTNS_RESET:				\
+			cli();					\
+			new_props.hours = props.hours;		\
+			new_props.minutes = props.minutes;	\
+			sei();					\
+			break;					\
+		default:					\
+			assert(false);				\
+		}						\
+	})
+
+// props - то, на что мы смотрим, когда считаем бизнес-логику
+// new_props - то, что мы рисуем на индикаторах
+// props подменяется на new_props атомарно при нажатии ENTER
 
 int
 main()
