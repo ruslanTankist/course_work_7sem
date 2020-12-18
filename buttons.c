@@ -10,9 +10,9 @@
 #define BTNS_DIR	DDRD		/* Register to specify port direction: read/write */
 #define BTNS_PIN	PIND		/* Register to read data */
 #define BTNS_EN		(byte_t)2	/* INT0 - any button pressed */
-#define BTNS_ENC0		(byte_t)3
-#define BTNS_ENC1		(byte_t)4
-#define BTNS_ENC2		(byte_t)52
+#define BTNS_ENC0	(byte_t)3
+#define BTNS_ENC1	(byte_t)4
+#define BTNS_ENC2	(byte_t)52
 
 #define BTNS_READY (!(BTNS_PIN & (1 << BTNS_EN))) /* Triggered by falling edge */
 
