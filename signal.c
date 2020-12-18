@@ -37,7 +37,7 @@ sig_init(unsigned long cpu_freq)
 }
 
 void
-sig_parse_props(byte_t b, struct btn_props *props)
+btn_time_parse_props(byte_t b, struct time_props *props)
 {
 	switch (b) {
 	case 0x00:

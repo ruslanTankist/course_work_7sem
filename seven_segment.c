@@ -8,15 +8,15 @@
 
 #include "seven_segment.h"
 
-#define SEG_ADDR_FREQ_HI	MAX7219_ADDR_DIG0
-#define SEG_ADDR_FREQ_LO	MAX7219_ADDR_DIG1
-#define SEG_ADDR_DC_HI		MAX7219_ADDR_DIG2
-#define SEG_ADDR_DC_LO		MAX7219_ADDR_DIG3
+#define HOUR_HI		MAX7219_ADDR_DIG0
+#define HOUR_LO		MAX7219_ADDR_DIG1
+#define MINUTE_HI	MAX7219_ADDR_DIG2
+#define MINUTE_LO	MAX7219_ADDR_DIG3
 
 #define SEG_DATA_TO_DISPLAY_ARR_SIZE 8 /* 4 indicators + 4 addresses */
 
 static byte_t seg_data_to_display[SEG_DATA_TO_DISPLAY_ARR_SIZE] =
-	{SEG_ADDR_FREQ_HI, 0, SEG_ADDR_FREQ_LO, 0, SEG_ADDR_DC_HI, 0, SEG_ADDR_DC_LO, 0};
+	{HOUR_HI, 0, HOUR_LO, 0, MINUTE_HI, 0, MINUTE_LO, 0};
 static size_t seg_data_to_display_i = 0;
 static size_t seg_data_len = SEG_DATA_TO_DISPLAY_ARR_SIZE;
 static bool *seg_display_done = NULL;
@@ -48,35 +48,27 @@ seg_init(void)
 #define seg_digit_hi(_x) (((_x % 100) / 10) % 10)
 
 void
-seg_display_sig_props_async(struct sig_props *props, bool *done)
+seg_display_time_props_async(struct time_props *props, bool *done)
 {
 	// Check if nodisplaying in progress
 	assert(seg_display_done == NULL);
 
-	byte_t freq_khz = byte_lo(props->freq / 1000);
-	byte_t dc = byte_lo(props->dc);
-
-	seg_data_to_display[0] = SEG_ADDR_FREQ_HI;
-	seg_data_to_display[1] = seg_digit_hi(freq_khz);
-	seg_data_to_display[2] = SEG_ADDR_FREQ_LO;
-	seg_data_to_display[3] = seg_digit_lo(freq_khz);
-	seg_data_to_display[4] = SEG_ADDR_DC_HI;
-	seg_data_to_display[5] = seg_digit_hi(dc);
-	seg_data_to_display[6] = SEG_ADDR_DC_LO;
-	seg_data_to_display[7] = seg_digit_lo(dc);
+	seg_data_to_display[0] = HOUR_HI;
+	seg_data_to_display[1] = seg_digit_hi(props->hours);
+	seg_data_to_display[2] = HOUR_LO;
+	seg_data_to_display[3] = seg_digit_lo(props->hours);
+	seg_data_to_display[4] = MINUTE_HI;
+	seg_data_to_display[5] = seg_digit_hi(props->minutes);
+	seg_data_to_display[6] = MINUTE_LO;
+	seg_data_to_display[7] = seg_digit_lo(props->minutes);
 
 	seg_display_done = done;
 	seg_data_len = SEG_DATA_TO_DISPLAY_ARR_SIZE;
 	seg_data_to_display_i = 0;
-
-	if (props->freq == SIG_FR_UNDEF)
-		seg_data_to_display_i = 4;
-	if (props->dc == SIG_DC_UNDEF)
-		seg_data_len = SEG_DATA_TO_DISPLAY_ARR_SIZE / 2;
 }
 
 void
-seg_display_sig_props_async_continue()
+seg_display_time_props_async_continue()
 {
 	assert(seg_display_done);
 	assert(seg_data_len <= SEG_DATA_TO_DISPLAY_ARR_SIZE);

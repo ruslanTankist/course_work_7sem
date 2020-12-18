@@ -9,9 +9,9 @@ void
 seg_init(void);
 
 void
-seg_display_sig_props_async(struct sig_props *props, bool *done);
+seg_display_time_props_async(struct time_props *props, bool *done);
 
 void
-seg_display_sig_props_async_continue();
+seg_display_time_props_async_continue();
 
 #endif
