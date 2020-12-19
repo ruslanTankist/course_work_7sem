@@ -12,6 +12,7 @@ time_init(void)
 {
 	// pre-scalar 1024
 	bit_set(&TCCR1B, CS10);
+	bit_set(&TCCR1B, CS12);
 	// enable T1 interrupt
 	bit_set(&TIMSK, TOIE1);
 
