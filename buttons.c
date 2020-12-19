@@ -4,7 +4,6 @@
 #include <avr/io.h>
 
 #include "buttons.h"
-#include "signal.h"
 
 #define BTNS_PORT	PORTD		/* Register to enable pull up resistors / write data */
 #define BTNS_DIR	DDRD		/* Register to specify port direction: read/write */
@@ -12,7 +11,12 @@
 #define BTNS_EN		(byte_t)2	/* INT0 - any button pressed */
 #define BTNS_ENC0	(byte_t)3
 #define BTNS_ENC1	(byte_t)4
-#define BTNS_ENC2	(byte_t)52
+#define BTNS_ENC2	(byte_t)5
+
+#define SIG_BTN_ENABLE		0
+#define SIG_ENCODING_BIT0	1
+#define SIG_ENCODING_BIT1	2
+#define SIG_ENCODING_BIT2	3
 
 #define BTNS_READY (!(BTNS_PIN & (1 << BTNS_EN))) /* Triggered by falling edge */
 
@@ -83,8 +87,8 @@ btns_read_byte(void)
 
 	bit_copy(&btns_port_snap, &btn_props_code, BTNS_EN, SIG_BTN_ENABLE);
 	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC0, SIG_ENCODING_BIT0);
-	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC0, SIG_ENCODING_BIT1);
-	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC0, SIG_ENCODING_BIT2);
+	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC1, SIG_ENCODING_BIT1);
+	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC2, SIG_ENCODING_BIT2);
 	
 	return btn_props_code;
 }

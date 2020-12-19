@@ -9,7 +9,7 @@
 #define MAX7219_PORT	PORTB	/* Register to enable pull up resistors / write data */
 #define MAX7219_DIR	DDRB	/* Register to specify port direction: read/write */
 #define MAX7219_PIN	PINB	/* Register to read data */
-#define MAX7219_WE	1	/* Pin to enable write of 7-segment indicator data */
+#define MAX7219_WE	3	/* Pin to enable write of 7-segment indicator data */
 
 bool max7219_initialized = false;
 

@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "signal.h"
+#include "time.h"
 
 void
 seg_init(void);

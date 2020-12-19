@@ -5,12 +5,12 @@
 
 #include "byte.h"
 
-#define BTNS_HOUR_INC	0x00
-#define BTNS_HOUR_DEC	0x01
-#define BTNS_MINUTE_INC	0x03
-#define BTNS_MINUTE_DEC	0x04
-#define BTNS_ENTER	0x05
-#define BTNS_RESET	0x06
+#define BTNS_HOUR_INC	0x01
+#define BTNS_HOUR_DEC	0x03
+#define BTNS_MINUTE_INC	0x05
+#define BTNS_MINUTE_DEC	0x07
+#define BTNS_ENTER	0x09
+#define BTNS_RESET	0x0B
 
 
 void

@@ -8,10 +8,10 @@
 #define SPI_PORT	PORTB	/* Register to enable pull up resistors / write data */
 #define SPI_DIR		DDRB	/* Register to specify port direction: read/write */
 #define SPI_PIN		PINB	/* Register to read data */
-#define SPI_SS		2	/* Pin of SPI Slave Select */
-#define SPI_MOSI	3	/* Pin of SPI Master Output Slave Input */
-#define SPI_MISO	4	/* Pin of SPI Master Input Slave Output */
-#define SPI_SCK		5	/* Pin of SPI Serial Clock */
+#define SPI_SS		4	/* Pin of SPI Slave Select */
+#define SPI_MOSI	5	/* Pin of SPI Master Output Slave Input */
+#define SPI_MISO	6	/* Pin of SPI Master Input Slave Output */
+#define SPI_SCK		7	/* Pin of SPI Serial Clock */
 
 #define SPI_WRITE_DONE (SPSR & (1 << SPIF))
 

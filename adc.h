@@ -6,7 +6,7 @@
 
 #define start_conv_adc()  ({ADCSRA |= (1<<ADSC);})
 
-void 
+void
 adc_init(void);
 
 struct adc_props {
