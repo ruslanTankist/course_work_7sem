@@ -25,4 +25,10 @@ adc_read_bytes(void);
 void
 adc_read_byte_async(struct adc_props *b, bool *ready);
 
+void
+adc_write_eeprom (struct adc_props props);
+
+struct adc_props *
+adc_read_eeprom (byte_t *len);
+
 #endif

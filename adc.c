@@ -4,6 +4,7 @@
 #include <avr/io.h>
 
 #include "adc.h"
+#include "eeprom.h"
 
 #define PIN_ADC0 0x60
 #define PIN_ADC1 0x61
@@ -57,6 +58,8 @@ adc_read_bytes(void)
 	ADMUX = PIN_ADC1;
 	adc_props.detector_2 = ADCH;
 
+	adc_write_eeprom(adc_props);
+
 	return adc_props;
 }
 
@@ -97,4 +100,32 @@ adc_read_byte_async(struct adc_props *b, bool *ready)
 	};
 
 	adc_set_intr_handler(adc_read_byte_async_intr_handler, &args);
+}
+
+void
+adc_write_eeprom (struct adc_props props)
+{
+	eeprom_write(props.detector_1);
+	eeprom_write(props.detector_2);
+}
+
+struct adc_props *
+adc_read_eeprom (byte_t *len)
+{
+	uint32_t current_address = eeprom_get_record_count();
+	if (current_address < 48)
+		(*len) = current_address;
+	else
+		(*len) = 48;
+
+	struct adc_props *adc_arr;
+	byte_t j = current_address - (*len);
+	for(byte_t i = 0; (*len); i++) {
+		adc_arr[i].detector_1 = eeprom_read(j);
+		adc_arr[i].detector_2 = eeprom_read(j+1);
+
+		j += 2;
+	}
+
+	return adc_arr;
 }

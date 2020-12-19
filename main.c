@@ -85,7 +85,6 @@ main()
 	adc_read_byte_async(&adc_b, &adc_ready);
 	start_conv_adc();
 
-	bool time_move_ready = false;
 	time_move_async(&props, &new_props);
 
 	for (;;) {
@@ -102,12 +101,12 @@ main()
 			seg_display_time_props_async(&props_displayed, &display_done);
 		} else if (!display_done) {
 			seg_display_time_props_async_continue();
-		} else if (adc_ready && set) {
-			adc_ready = false;
+		} else if (((props.minutes == 30) || (props.minutes == 0)) &&
+				adc_ready && set) {
+			//TODO Reading detectors
+		} else if ((props.hours == 0) || (props.hours == 12)) {
+			//TODO Sending adc with uart
 		}
-		//TODO 
-		//ОТсчет времени
-		//сохранять adc
 	}
 	return 0;
 }
