@@ -86,7 +86,7 @@ main()
 	start_conv_adc();
 
 	bool time_move_ready = false;
-	time_move_async(&props, &time_move_ready);
+	time_move_async(&props, &new_props);
 
 	for (;;) {
 		if (btns_ready) {
@@ -94,15 +94,14 @@ main()
 			btns_ready = false;
 			btns_read_byte_async(&btns_b, &btns_ready);
 		} else if (((props_displayed.hours != new_props.hours) ||
-				(props_displayed.minutes != new_props.minutes)) &&
+				(props_displayed.minutes != new_props.minutes) ||
+				(props_displayed.seconds != new_props.seconds)) &&
 				display_done) {
 			display_done = false;
 			props_displayed = new_props;
 			seg_display_time_props_async(&props_displayed, &display_done);
 		} else if (!display_done) {
 			seg_display_time_props_async_continue();
-		} else if (time_move_ready) {
-			time_move_async(&props, &time_move_ready);
 		} else if (adc_ready && set) {
 			adc_ready = false;
 		}
@@ -111,4 +110,4 @@ main()
 		//сохранять adc
 	}
 	return 0;
- }
+}

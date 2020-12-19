@@ -15,16 +15,7 @@ struct time_props {
 typedef void (*time_intr_handler_t)(void *args);
 
 void
-time_set_intr_handler(time_intr_handler_t handler, void *args);
-
-void
-time_move(struct time_props *time_setting);
-
-void
-time_async_intr_handler(void *raw_args);
-
-void
-time_move_async(struct time_props *time_setting, bool *ready);
+time_move_async(struct time_props *time_setting, struct time_props *new_time_setting);
 
 void
 time_inc_hour(struct time_props *time_setting);

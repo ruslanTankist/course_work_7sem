@@ -5,6 +5,8 @@
 
 #include "byte.h"
 
+#define ONE_SEC_TACTS 61632
+
 void
 time_init(void)
 {
@@ -13,74 +15,25 @@ time_init(void)
 	// enable T1 interrupt
 	bit_set(&TIMSK, TOIE1);
 
-	OCR1A = 3906;
-	TCNT1 = 0;
+	TCNT1 = ONE_SEC_TACTS;
 }
 
-static time_intr_handler_t time_intr_handler = NULL;
-static void *time_intr_handler_args = NULL;
+static struct time_props *time_setting_loc = NULL;
+static struct time_props *new_time_setting_loc = NULL;
 
 ISR(TIMER1_OVF_vect)
 {
-	if (time_intr_handler) {
-		time_intr_handler(time_intr_handler_args);
-	}
-	TCNT1 = 0;
+	time_inc_second(time_setting_loc);
+	time_inc_second(new_time_setting_loc);
+	TCNT1 = ONE_SEC_TACTS;
 	bit_set(&TIFR, OCF1A);
 }
 
 void
-time_set_intr_handler(time_intr_handler_t handler, void *args)
+time_move_async(struct time_props *time_setting, struct time_props *new_time_setting)
 {
-	cli();
-
-	time_intr_handler = handler;
-	time_intr_handler = args;
-
-	sei();
-}
-
-struct time_move_async_intr_handler_args {
-	struct time_props *time_setting;
-	bool *ready;
-};
-
-void
-time_move(struct time_props *time_setting)
-{
-	time_inc_second(time_setting);
-}
-
-void
-time_move_async_intr_handler(void *raw_args)
-{
-	assert(raw_args);
-
-	struct time_move_async_intr_handler_args *args =
-		(struct time_move_async_intr_handler_args *) raw_args;
-
-	time_move(&(args->time_setting));
-
-	*(args->ready) = true;
-
-	time_intr_handler = NULL;
-	time_intr_handler_args = NULL;
-}
-
-void
-time_move_async(struct time_props *time_setting, bool *ready)
-{
-	assert(ready);
-
-	static struct time_move_async_intr_handler_args args;
-	assert(time_intr_handler_args == NULL);
-
-	args = (struct time_move_async_intr_handler_args) {
-		time_setting = time_setting,
-		ready = ready,
-	};
-
-	time_set_intr_handler(time_move_async_intr_handler, &args);
+	time_setting_loc = time_setting;
+	new_time_setting_loc = new_time_setting;
 }
 
 void

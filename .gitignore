@@ -1,4 +1,7 @@
-.workspace
+*.workspace
 default/*
+*.pdsbak
+*.aps
+*.aws
 
 !default/Makefile
