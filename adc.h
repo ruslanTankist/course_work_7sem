@@ -4,7 +4,8 @@
 #include <stdbool.h>
 #include "byte.h"
 
-#define start_conv_adc()  ({ADCSRA |= (1<<ADSC);})
+#define start_conv_adc() ({bit_set(ADCSRA, ADSC);})
+#define stop_conv_adc() ({bit_clr(ADCSRA, ADSC);})
 
 void
 adc_init(void);

@@ -1,4 +1,4 @@
-#define F_CPU		4000000L
+#define F_CPU		8000000L
 #define BAUD_RATE	9600L
 
 #include <assert.h>
@@ -61,7 +61,7 @@ main()
 	btns_init();
 	spi_init();
 	adc_init();
-	time_init();
+	time_init(F_CPU);
 
 	// Enable global interrupts
 	sei();

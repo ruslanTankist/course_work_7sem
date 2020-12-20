@@ -11,22 +11,30 @@ typedef volatile uint8_t byte_t;
 #define byte_hi(_x)	((byte_t)(_x >> 8))
 #define byte_lo(_x)	((byte_t)(_x & 0xFF))
 
-bool
-bit_get(const byte_t *src, byte_t bit);
+#define bit_set(_dest, _bit) ({_dest |= (1 << _bit);})
+#define bit_clr(_dest, _bit) ({_dest &= (~(1 << _bit));})
 
-void
-bit_set(byte_t *dest, byte_t bit);
-
-void
-bit_clr(byte_t *dest, byte_t bit);
-
-void
-bit_invert(byte_t *dest, byte_t bit);
-
-void
-bit_def(byte_t *dest, byte_t bit, bool val);
-
-void
-bit_copy(const byte_t *src, byte_t *dest, byte_t src_bit, byte_t dest_bit);
+#define bit_get(_src, _bit) (_src & (1 << _bit))
+#define bit_invert(_dest, _bit)						\
+	({								\
+		if(bit_get(_dest, _bit)) {				\
+			bit_clr(_dest, _bit);				\
+		} else {						\
+			bit_set(_dest, _bit);				\
+		}							\
+	 })
+#define bit_def(_dest, _bit, _val)					\
+	({								\
+		if (_val) {						\
+			bit_set(_dest, _bit);				\
+		} else {						\
+			bit_clr(_dest, _bit);				\
+		}							\
+	})
+#define bit_copy(_src, _dest, _src_bit, _dest_bit)			\
+	({								\
+		byte_t _tmp = bit_get(_src, _src_bit);			\
+		bit_def(_dest, _dest_bit, _tmp);			\
+	})
 
 #endif

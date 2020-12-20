@@ -1,30 +1,31 @@
 #include "eeprom.h"
 
 #include <avr/eeprom.h>
+#include <avr/interrupt.h>
 
-static uint32_t current_address = 0;
+static byte_t current_address = 0;
 
 void
 eeprom_write (byte_t data)
 {
-	bit_clr(&EECR, EEWE);
-	EEAR = current_address;
-	EEDR = data;
-	bit_set(&EECR, EEMWE);
-	bit_set(&EECR, EEWE);
+	cli();
+	eeprom_write_byte((uint8_t*)current_address, data);
+	sei();
+	current_address++;
 }
 
 byte_t
 eeprom_read (byte_t address)
 {
-	EEAR = address;
-	bit_set(&EECR, EERE);
-	byte_t data = EEDR;
+	byte_t b = eeprom_read_byte((uint8_t*)address);
 
-	return data;
+	// all record for 12 hours are read, we clear them
+	if(address == current_address)
+		current_address = 0;
+	return b;
 }
 
-uint32_t
+byte_t
 eeprom_get_record_count()
 {
 	return current_address;

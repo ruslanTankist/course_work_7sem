@@ -50,15 +50,19 @@ struct adc_props
 adc_read_bytes(void)
 {	
 	struct adc_props adc_props;
-	start_conv_adc();
 
 	ADMUX = PIN_ADC0;
+	start_conv_adc();
+	while (ADCSRA & (1 << ADSC));
 	adc_props.detector_1 = ADCH;
-	
+
 	ADMUX = PIN_ADC1;
+	start_conv_adc();
+	while (ADCSRA & (1 << ADSC));
 	adc_props.detector_2 = ADCH;
 
 	adc_write_eeprom(adc_props);
+
 
 	return adc_props;
 }
@@ -112,15 +116,11 @@ adc_write_eeprom (struct adc_props props)
 struct adc_props *
 adc_read_eeprom (byte_t *len)
 {
-	uint32_t current_address = eeprom_get_record_count();
-	if (current_address < 48)
-		(*len) = current_address;
-	else
-		(*len) = 48;
+	(*len) = eeprom_get_record_count() / 2;
 
 	struct adc_props *adc_arr;
-	byte_t j = current_address - (*len);
-	for(byte_t i = 0; (*len); i++) {
+	byte_t j = 0;
+	for(byte_t i = 0; i < (*len); i++) {
 		adc_arr[i].detector_1 = eeprom_read(j);
 		adc_arr[i].detector_2 = eeprom_read(j+1);
 

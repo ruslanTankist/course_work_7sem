@@ -36,15 +36,15 @@ btns_init(void)
 	MCUCR |= (1 << 1);
 
 	// Set all BTNS and BTNS_EV pins to input
-	bit_clr(&BTNS_DIR, BTNS_EN);
-	bit_clr(&BTNS_DIR, BTNS_ENC0);
-	bit_clr(&BTNS_DIR, BTNS_ENC1);
-	bit_clr(&BTNS_DIR, BTNS_ENC2);
+	bit_clr(BTNS_DIR, BTNS_EN);
+	bit_clr(BTNS_DIR, BTNS_ENC0);
+	bit_clr(BTNS_DIR, BTNS_ENC1);
+	bit_clr(BTNS_DIR, BTNS_ENC2);
 	// Enable pull ups
-	bit_set(&BTNS_PORT, BTNS_EN);
-	bit_set(&BTNS_PORT, BTNS_ENC0);
-	bit_set(&BTNS_PORT, BTNS_ENC1);
-	bit_set(&BTNS_PORT, BTNS_ENC2);
+	bit_set(BTNS_PORT, BTNS_EN);
+	bit_set(BTNS_PORT, BTNS_ENC0);
+	bit_set(BTNS_PORT, BTNS_ENC1);
+	bit_set(BTNS_PORT, BTNS_ENC2);
 
 	btns_initialized = true;
 
@@ -85,10 +85,10 @@ btns_read_byte(void)
 	byte_t btns_port_snap = ~BTNS_PIN;
 	byte_t btn_props_code = 0;
 
-	bit_copy(&btns_port_snap, &btn_props_code, BTNS_EN, SIG_BTN_ENABLE);
-	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC0, SIG_ENCODING_BIT0);
-	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC1, SIG_ENCODING_BIT1);
-	bit_copy(&btns_port_snap, &btn_props_code, BTNS_ENC2, SIG_ENCODING_BIT2);
+	bit_copy(btns_port_snap, btn_props_code, BTNS_EN, SIG_BTN_ENABLE);
+	bit_copy(btns_port_snap, btn_props_code, BTNS_ENC0, SIG_ENCODING_BIT0);
+	bit_copy(btns_port_snap, btn_props_code, BTNS_ENC1, SIG_ENCODING_BIT1);
+	bit_copy(btns_port_snap, btn_props_code, BTNS_ENC2, SIG_ENCODING_BIT2);
 	
 	return btn_props_code;
 }

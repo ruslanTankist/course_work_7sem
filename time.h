@@ -4,7 +4,7 @@
 #include "byte.h"
 
 void
-time_init(void);
+time_init(uint32_t cpu_freq);
 
 struct time_props {
 	byte_t hours;
