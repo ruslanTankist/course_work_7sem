@@ -80,10 +80,8 @@ main()
 	bool set = false;
 	btns_read_byte_async(&btns_b, &btns_ready);
 
-	struct adc_props adc_b = {0x00, 0x00};
-	bool adc_ready = false;
-	adc_read_byte_async(&adc_b, &adc_ready);
-	start_conv_adc();
+	bool read_eeprom_once = true;
+	bool write_eeprom_once = true;
 
 	time_move_async(&props, &new_props);
 
@@ -102,10 +100,17 @@ main()
 		} else if (!display_done) {
 			seg_display_time_props_async_continue();
 		} else if (((props.minutes == 30) || (props.minutes == 0)) &&
-				adc_ready && set) {
-			//TODO Reading detectors
-		} else if ((props.hours == 0) || (props.hours == 12)) {
+				set && write_eeprom_once) {
+			write_eeprom_once = false;
+			adc_read_byte_async();
+		} else if ((props.minutes == 31) || (props.minutes == 1)) {
+			write_eeprom_once = true;
+		} else if (((props.hours == 0) || (props.hours == 12)) &&
+				set && read_eeprom_once) {
+			read_eeprom_once = false;
 			//TODO Sending adc with uart
+		} else if ((props.hours == 1) || (props.hours == 13)) {
+			read_eeprom_once = true;
 		}
 	}
 	return 0;

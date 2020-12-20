@@ -26,27 +26,25 @@ adc_init()
 }
 
 static adc_intr_handler_t adc_intr_handler = NULL;
-static void *adc_intr_handler_args = NULL;
 
 ISR(ADC_vect)
 {
 	if (adc_intr_handler) {
-		adc_intr_handler(adc_intr_handler_args);
+		adc_intr_handler();
 	}
 }
 
 void
-adc_set_intr_handler(adc_intr_handler_t handler, void *args)
+adc_set_intr_handler(adc_intr_handler_t handler)
 {
 	cli();
 
 	adc_intr_handler = handler;
-	adc_intr_handler_args = args;
 
 	sei();
 }
 
-struct adc_props
+void
 adc_read_bytes(void)
 {	
 	struct adc_props adc_props;
@@ -62,48 +60,20 @@ adc_read_bytes(void)
 	adc_props.detector_2 = ADCH;
 
 	adc_write_eeprom(adc_props);
-
-
-	return adc_props;
 }
 
-struct adc_read_byte_async_intr_handler_args {
-	struct adc_props *b;
-	bool *ready;
-};
-
 void
-adc_read_byte_async_intr_handler(void *raw_args)
+adc_read_byte_async_intr_handler()
 {
-	assert(raw_args);
-
-	struct adc_read_byte_async_intr_handler_args *args =
-		(struct adc_read_byte_async_intr_handler_args *) raw_args;
-
-	struct adc_props b = adc_read_bytes();
-
-	*(args->b) = b;
-	*(args->ready) = true;
+	adc_read_bytes();
 
 	adc_intr_handler = NULL;
-	adc_intr_handler_args = NULL;
 }
 
 void
-adc_read_byte_async(struct adc_props *b, bool *ready)
+adc_read_byte_async()
 {
-	assert(b);
-	assert(ready);
-
-	static struct adc_read_byte_async_intr_handler_args args;
-	assert(adc_intr_handler_args == NULL); // Check if async read in progress
-
-	args = (struct adc_read_byte_async_intr_handler_args) {
-		b = b,
-		ready = ready,
-	};
-
-	adc_set_intr_handler(adc_read_byte_async_intr_handler, &args);
+	adc_set_intr_handler(adc_read_byte_async_intr_handler);
 }
 
 void

@@ -15,16 +15,16 @@ struct adc_props {
 	byte_t detector_2;
 };
 
-typedef void (*adc_intr_handler_t)(void *args);
+typedef void (*adc_intr_handler_t)();
 
 void
-adc_set_intr_handler(adc_intr_handler_t handler, void *args);
+adc_set_intr_handler(adc_intr_handler_t handler);
 
-struct adc_props
+void
 adc_read_bytes(void);
 
 void
-adc_read_byte_async(struct adc_props *b, bool *ready);
+adc_read_byte_async();
 
 void
 adc_write_eeprom (struct adc_props props);
