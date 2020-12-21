@@ -14,6 +14,7 @@
 #include "adc.h"
 #include "time.h"
 #include "spi.h"
+#include "crc8.h"
 
 #define CONFIRM_REQUEST 0x01
 #define DENY_BYTE 0x00
@@ -76,8 +77,8 @@ main()
 	// External initialization
 	seg_init();
 
-	struct time_props props;
-	struct time_props new_props;
+	struct time_props props = {0, 0, 0};
+	struct time_props new_props = props;
 
 	struct time_props props_displayed = {-1, -1};
 	bool display_done = true;
@@ -153,6 +154,7 @@ main()
 				uart_write_byte(adc_arr[i].time.hours);
 				uart_write_byte(adc_arr[i].time.minutes);
 			}
+			uart_write_byte(get_crc(&(adc_arr[0].detector_1), (len*4)));
 		} else if (!time_to_read_and_send) {
 			read_eeprom_once = true;
 		}
