@@ -26,13 +26,13 @@ uart_init(unsigned long cpu_freq, unsigned long baud_rate)
 	UBRRH = byte_hi(baud_driver);
 
 	// Enable receiver (we don't need transmitter for this project)
-	UCSRB = (1 << RXEN);
+	UCSRB = (1 << RXEN)|(1 << TXEN);
 
 	// Set frame format: 8data, 2 stop bit
-	UCSRC = (1 << URSEL)|(1 << USBS)|(1 << UCSZ0)|(1 << UCSZ1);
+	UCSRC = (1 << URSEL)|(1 << USBS)|(1 << UCSZ0)|(1 << UCSZ1); //|(1 << UPM1);
 
 	// UART Receive Complete interrupt enabled
-	UCSRB |= (1 << RXCIE);
+	UCSRB |= (1 << RXCIE); //|(1 << TXCIE);
 
 	uart_initialized = true;
 
@@ -43,7 +43,7 @@ uart_init(unsigned long cpu_freq, unsigned long baud_rate)
 static uart_intr_handler_t uart_rx_intr_handler = NULL;
 static void *uart_rx_intr_handler_args = NULL;
 
-ISR(USART_RXC_vect)
+ISR(USART_RX_vect)
 {
 	if (uart_rx_intr_handler) {
 		uart_rx_intr_handler(uart_rx_intr_handler_args);
@@ -113,7 +113,8 @@ uart_read_byte_async_intr_handler(void *raw_args)
 	*(args->b) = b;
 	if (!must_read)
 		*(args->err) = err;
-	*(args->ready) = true;
+	if (!(args->ready == NULL))
+		*(args->ready) = true;
 
 	// Clean up
 	uart_rx_intr_handler = NULL;
@@ -124,7 +125,6 @@ void
 uart_read_byte_async(byte_t *b, bool *ready, int *err)
 {
 	assert(b);
-	assert(ready);
 
 	static struct uart_read_byte_async_intr_handler_args args;
 	assert(uart_rx_intr_handler_args == NULL); // Check if async read in progress
@@ -142,4 +142,74 @@ void
 uart_must_read_byte_async(byte_t *b, bool *ready)
 {
 	uart_read_byte_async(b, ready, NULL);
+}
+
+static uart_intr_handler_t uart_tx_intr_handler = NULL;
+static void *uart_tx_intr_handler_args = NULL;
+
+ISR(USART_TX_vect)
+{
+	if (uart_tx_intr_handler) {
+		uart_tx_intr_handler(uart_tx_intr_handler_args);
+	}
+}
+
+void
+uart_set_tx_intr_handler(uart_intr_handler_t handler, void *args)
+{
+	// Disable global interrupts
+	cli();
+
+	uart_tx_intr_handler = handler;
+	uart_tx_intr_handler_args = args;
+
+	// Enable global interrupts
+	sei();
+}
+
+void
+uart_write_byte(byte_t b)
+{
+	// Wait for register to be ready
+	while (!UART_TX_READY);
+
+	// Write and send b
+	UDR = b;
+}
+
+struct uart_write_byte_async_intr_handler_args {
+	byte_t b;
+	bool *ready;
+};
+
+static
+void
+uart_write_byte_async_intr_handler(void *raw_args)
+{
+	assert(raw_args);
+
+	struct uart_write_byte_async_intr_handler_args *args =
+		(struct uart_write_byte_async_intr_handler_args *) raw_args;
+
+	uart_write_byte(args->b);
+	if (args->ready != NULL)
+		*(args->ready) = true;
+
+	// Clean up
+	uart_tx_intr_handler = NULL;
+	uart_tx_intr_handler_args = NULL;
+}
+
+void
+uart_write_byte_async(byte_t b, bool *ready)
+{
+	static struct uart_write_byte_async_intr_handler_args args;
+	assert(uart_tx_intr_handler_args == NULL); // Check if async write in progress
+
+	args = (struct uart_write_byte_async_intr_handler_args) {
+		b = b,
+		ready = ready,
+	};
+
+	uart_set_tx_intr_handler(uart_write_byte_async_intr_handler, &args);
 }

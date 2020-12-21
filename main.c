@@ -1,4 +1,4 @@
-#define F_CPU		8000000L
+#define F_CPU		4000000L
 #define BAUD_RATE	9600L
 
 #include <assert.h>
@@ -14,6 +14,13 @@
 #include "adc.h"
 #include "time.h"
 #include "spi.h"
+
+#define CONFIRM_REQUEST 0x01
+#define DENY_BYTE 0x00
+#define DEFAULT_BYTE 0xFF
+
+#define time_differs(_time1, _time2)		\
+	((_time1.hours != _time2.hours) || (_time1.minutes != _time2.minutes) || (_time1.seconds != _time2.seconds))
 
 #define handle_btn_pressed(_btn)				\
 	({							\
@@ -56,13 +63,13 @@ int
 main()
 {
 	cli();
-//	// Internal initialization
-//	uart_init(F_CPU, BAUD_RATE);
+	// Internal initialization
 	btns_init();
 	spi_init();
 	adc_init();
 	time_init(F_CPU);
 
+	uart_init(F_CPU, BAUD_RATE);
 	// Enable global interrupts
 	sei();
 
@@ -83,33 +90,70 @@ main()
 	bool read_eeprom_once = true;
 	bool write_eeprom_once = true;
 
+	bool time_to_write = false;
+	bool time_to_read_and_send = false;
 	time_move_async(&props, &new_props);
 
+	byte_t confirm_byte = DEFAULT_BYTE;
+	byte_t uart_byte = DEFAULT_BYTE;
+	bool uart_ready = false;
+	bool uart_confirmation = false;
+	bool repeated_request = false;
+
 	for (;;) {
+		// event conditions to work with eeprom
+		if ((props.minutes % 30) == 0)
+			time_to_write = true;
+		else
+			time_to_write = false;
+
+		if ((props.hours % 12) == 0)
+			time_to_read_and_send = true;
+		else
+			time_to_read_and_send = false;
+
 		if (btns_ready) {
 			handle_btn_pressed(btns_b);
 			btns_ready = false;
 			btns_read_byte_async(&btns_b, &btns_ready);
-		} else if (((props_displayed.hours != new_props.hours) ||
-				(props_displayed.minutes != new_props.minutes) ||
-				(props_displayed.seconds != new_props.seconds)) &&
-				display_done) {
+		} else if (time_differs(props_displayed, new_props) && display_done) {
 			display_done = false;
 			props_displayed = new_props;
 			seg_display_time_props_async(&props_displayed, &display_done);
 		} else if (!display_done) {
 			seg_display_time_props_async_continue();
-		} else if (((props.minutes == 30) || (props.minutes == 0)) &&
-				set && write_eeprom_once) {
+		} else if (time_to_write && set && write_eeprom_once) {
 			write_eeprom_once = false;
-			adc_read_byte_async();
-		} else if ((props.minutes == 31) || (props.minutes == 1)) {
+			adc_read_bytes(props);
+		} else if (!time_to_write) {
 			write_eeprom_once = true;
-		} else if (((props.hours == 0) || (props.hours == 12)) &&
-				set && read_eeprom_once) {
+		} else if ((time_to_read_and_send && set && read_eeprom_once) || repeated_request) {
 			read_eeprom_once = false;
-			//TODO Sending adc with uart
-		} else if ((props.hours == 1) || (props.hours == 13)) {
+			uart_write_byte(CONFIRM_REQUEST);
+
+			uart_must_read_byte_async(&uart_byte, &uart_ready);
+		} else if (uart_ready) {
+			uart_ready = false;
+			confirm_byte = uart_byte;
+			if (confirm_byte != DENY_BYTE && confirm_byte != DEFAULT_BYTE) {
+				uart_confirmation = true;
+				confirm_byte = DEFAULT_BYTE;
+				repeated_request = false;
+			} else if (confirm_byte == DENY_BYTE) {
+				repeated_request = true;
+			}
+		} else if (uart_confirmation) {
+			uart_confirmation = false;
+			byte_t len;
+			struct adc_props adc_arr[48];
+			adc_read_eeprom(adc_arr, &len);
+			for (byte_t i = 0; (i < len) && (i < 48) ; i++) {
+				uart_write_byte(adc_arr[i].detector_1);
+				uart_write_byte(adc_arr[i].detector_2);
+				uart_write_byte(adc_arr[i].time.hours);
+				uart_write_byte(adc_arr[i].time.minutes);
+			}
+		} else if (!time_to_read_and_send) {
 			read_eeprom_once = true;
 		}
 	}

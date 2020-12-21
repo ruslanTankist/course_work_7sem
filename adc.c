@@ -26,28 +26,31 @@ adc_init()
 }
 
 static adc_intr_handler_t adc_intr_handler = NULL;
+static void *adc_intr_handler_args = NULL;
 
 ISR(ADC_vect)
 {
 	if (adc_intr_handler) {
-		adc_intr_handler();
+		adc_intr_handler(adc_intr_handler_args);
 	}
 }
 
 void
-adc_set_intr_handler(adc_intr_handler_t handler)
+adc_set_intr_handler(adc_intr_handler_t handler, void *args)
 {
 	cli();
 
 	adc_intr_handler = handler;
+	adc_intr_handler_args = args;
 
 	sei();
 }
 
 void
-adc_read_bytes(void)
-{	
+adc_read_bytes(struct time_props time)
+{
 	struct adc_props adc_props;
+	adc_props.time = time;
 
 	ADMUX = PIN_ADC0;
 	start_conv_adc();
@@ -62,18 +65,33 @@ adc_read_bytes(void)
 	adc_write_eeprom(adc_props);
 }
 
+struct adc_read_byte_async_intr_handler_args {
+	struct time_props time;
+};
+
 void
-adc_read_byte_async_intr_handler()
+adc_read_byte_async_intr_handler(void *raw_args)
 {
-	adc_read_bytes();
+	struct adc_read_byte_async_intr_handler_args *args =
+		(struct adc_read_byte_async_intr_handler_args *) raw_args;
+
+	adc_read_bytes(args->time);
 
 	adc_intr_handler = NULL;
+	adc_intr_handler_args = NULL;
 }
 
 void
-adc_read_byte_async()
+adc_read_byte_async(struct time_props time)
 {
-	adc_set_intr_handler(adc_read_byte_async_intr_handler);
+	static struct adc_read_byte_async_intr_handler_args args;
+	assert(adc_intr_handler_args = NULL);
+
+	args = (struct adc_read_byte_async_intr_handler_args) {
+		time = time,
+	};
+
+	adc_set_intr_handler(adc_read_byte_async_intr_handler, &args);
 }
 
 void
@@ -81,21 +99,22 @@ adc_write_eeprom (struct adc_props props)
 {
 	eeprom_write(props.detector_1);
 	eeprom_write(props.detector_2);
+	eeprom_write(props.time.hours);
+	eeprom_write(props.time.minutes);
 }
 
-struct adc_props *
-adc_read_eeprom (byte_t *len)
+void
+adc_read_eeprom (struct adc_props *adc_arr, byte_t *len)
 {
-	(*len) = eeprom_get_record_count() / 2;
+	(*len) = eeprom_get_record_count();
 
-	struct adc_props *adc_arr;
 	byte_t j = 0;
 	for(byte_t i = 0; i < (*len); i++) {
 		adc_arr[i].detector_1 = eeprom_read(j);
 		adc_arr[i].detector_2 = eeprom_read(j+1);
+		adc_arr[i].time.hours = eeprom_read(j+2);
+		adc_arr[i].time.minutes = eeprom_read(j+3);
 
-		j += 2;
+		j += 4;
 	}
-
-	return adc_arr;
 }

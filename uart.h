@@ -25,4 +25,13 @@ uart_read_byte_async(byte_t *b, bool *ready, int *err);
 void
 uart_must_read_byte_async(byte_t *b, bool *ready);
 
+void
+uart_set_tx_intr_handler(uart_intr_handler_t handler, void *args);
+
+void
+uart_write_byte(byte_t b);
+
+void
+uart_write_byte_async(byte_t b, bool *ready);
+
 #endif
